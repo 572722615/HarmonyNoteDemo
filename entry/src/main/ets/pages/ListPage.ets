@@ -4,11 +4,92 @@ import { TaskModel } from '../model/TaskModel'
 export struct ListPage {
   @Link displayAddPage: boolean
   @Link taskList: Array<TaskModel>
+  @State taskType: string = 'all'
+
+  getTaskList(): Array<TaskModel> {
+    if (this.taskType == 'all') {
+      return this.taskList
+    } else if (this.taskType == 'todo') {
+      return this.taskList.filter((item) => {
+        if(!item.isComp){
+          return true
+        }
+      })
+    }else if(this.taskType == 'done') {
+      return this.taskList.filter((item) => {
+        if(item.isComp){
+          return true
+        }
+      })
+    }
+  }
+
+  deleteTask(index: number) {
+    AlertDialog.show({
+      title: '删除任务',
+      message: '二次确认',
+      autoCancel: true,
+      alignment: DialogAlignment.Bottom,
+      offset: {
+        dx: 0, dy: -400
+      },
+      secondaryButton: {
+        value: '是',
+        action: () => {
+          this.taskList.splice(index, 1)
+
+        }
+      },
+      primaryButton: {
+        value: '否',
+        action: () => {
+          this.taskList.splice(index, 1)
+
+        }
+      }
+    })
+  }
 
   build() {
-    Column({ space: 20 }) {
+    Column({ space: 15 }) {
       Text('我的任务').fontSize(20)
         .fontWeight(FontWeight.Bold)
+      Row() {
+        Column() {
+          Text('全部')
+          Radio({ value: 'all', group: 'type' })
+            .onChange((isSelect) => {
+              if (isSelect) {
+                this.taskType = 'all'
+              }
+            })
+            .checked(this.taskType == 'all' ? true : false)
+
+        }
+
+        Column() {
+          Text('待办')
+          Radio({ value: 'todo', group: 'type' })
+            .onChange((isSelect) => {
+              if (isSelect) {
+                this.taskType = 'todo'
+              }
+            })
+            .checked(this.taskType == 'todo' ? true : false)
+
+        }
+
+        Column() {
+          Text('完成')
+          Radio({ value: 'done', group: 'type' })
+            .onChange((isSelect) => {
+              if (isSelect) {
+                this.taskType = 'done'
+              }
+            })
+            .checked(this.taskType == 'done' ? true : false)
+        }
+      }.width('70%').justifyContent(FlexAlign.SpaceAround)
 
       Stack() {
         Image('images/bg.png').width(300)
@@ -16,36 +97,45 @@ export struct ListPage {
 
         Column({ space: 10 }) {
 
-          ForEach(this.taskList, (item: TaskModel, index) => {
-            Row() {
 
-              Checkbox().select(item.isComp)
-                .onChange((value) => {
-                  let oldTask = this.taskList[index]
-                  let newTask = new TaskModel({
-                    taskContent:oldTask.taskContent,
-                    isComp : value
-                  })
-                  this.taskList[index] = newTask
-                })
+          List() {
+            ForEach(this.getTaskList(), (item: TaskModel, index) => {
+              ListItem() {
+                Row() {
+
+                  Checkbox().select(item.isComp)
+                    .onChange((value) => {
+                      let oldTask = this.taskList[index]
+                      let newTask = new TaskModel({
+                        taskContent: oldTask.taskContent,
+                        isComp: value
+                      })
+                      this.taskList[index] = newTask
+                    })
 
 
-              Text(item.taskContent)
-                .margin({ left: 10 })
-                .decoration({
-                  type: item.isComp ?
-                  TextDecorationType.LineThrough :
-                  TextDecorationType.None
-                })
+                  Text(item.taskContent)
+                    .margin({ left: 10 })
+                    .decoration({
+                      type: item.isComp ?
+                      TextDecorationType.LineThrough :
+                      TextDecorationType.None
+                    })
+                    .width('70%')
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-              Blank()
-              Image('images/delete.png').width(20)
-                .onClick(() => {
-                  this.taskList.splice(index, 1)
-                })
-            }.width('70%')
-          })
 
+                  Blank()
+                  Image('images/delete.png').width(20)
+                    .onClick(() => {
+                      this.deleteTask(index)
+                    })
+                }.width('100%')
+
+              }
+            })
+          }.width('70%').height(300)
 
         }
         .margin({ top: 70 })

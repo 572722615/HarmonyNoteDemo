@@ -44,7 +44,8 @@ export struct AddPage {
       .onClick(() => {
         let task = new TaskModel({ taskContent: this.taskContent, isComp: false })
 
-        this.taskList.push(task)
+        //逆序
+        this.taskList.splice(0, 0, task)
         this.displayAddPage = false
       })
 
